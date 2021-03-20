@@ -1,187 +1,12 @@
-# %% [markdown]
-# # Inverse indexing, index search, and signal page rank¶
-
-# %% [markdown]
-# ## PART I: Preparing the documents/webpages
-
-# %% [code]
-# Load libraries
-
-from sklearn import linear_model, feature_selection, preprocessing
-from sklearn import model_selection
-from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error
-from statsmodels.tools.tools import add_constant
-from statsmodels.tools.eval_measures import mse
-import statsmodels.formula.api as smf
-import statsmodels.api as sm
-import matplotlib.pyplot as plt
-from scipy import stats
-from collections import Counter
-import numpy as np
-import re
-from textblob import TextBlob as tb
-import math
-import pandas as pd
-import numpy as np
-import string
-import random
-
 import nltk
-from nltk.corpus import brown
-from nltk.corpus import reuters
+import re
+import string
 
-from nltk.tokenize import word_tokenize
-from nltk.tokenize import RegexpTokenizer
+import numpy as np
+import pandas as pd
 
+from collections import Counter
 from nltk.corpus import stopwords
-
-from nltk.stem.porter import PorterStemmer
-from nltk.stem import SnowballStemmer
-
-
-# %% [code]
-# load 10k reuters news documents
-nltk.download('reuters')
-nltk.download('punkt')
-nltk.download('stopwords')
-len(reuters.fileids())
-
-# %% [code]
-# view text from one document
-reuters.raw(fileids=['test/14826'])[0:201]
-
-# %% [code]
-# remove punctuation from all DOCs
-exclude = set(string.punctuation)
-alldocslist = []
-
-for index, i in enumerate(reuters.fileids()):
-    text = reuters.raw(fileids=[i])
-    text = ''.join(ch for ch in text if ch not in exclude)
-    alldocslist.append(text)
-
-print(alldocslist[1])
-
-# %% [code]
-# tokenize words in all DOCS
-plot_data = [[]] * len(alldocslist)
-
-for doc in alldocslist:
-    text = doc
-    tokentext = word_tokenize(text)
-    plot_data[index].append(tokentext)
-
-print(plot_data[0][1])
-
-# %% [code]
-# Navigation: first index gives all documents, second index gives specific document, third index gives words of that doc
-plot_data[0][1][0:10]
-
-# %% [code]
-
-# make all words lower case for all docs
-for x in range(len(reuters.fileids())):
-    lowers = [word.lower() for word in plot_data[0][x]]
-    plot_data[0][x] = lowers
-
-plot_data[0][1][0:10]
-
-# %% [code]
-# remove stop words from all docs
-stop_words = set(stopwords.words('english'))
-
-for x in range(len(reuters.fileids())):
-    filtered_sentence = [w for w in plot_data[0][x] if not w in stop_words]
-    plot_data[0][x] = filtered_sentence
-
-plot_data[0][1][0:10]
-
-# %% [code]
-# stem words EXAMPLE (could try others/lemmers )
-
-snowball_stemmer = SnowballStemmer("english")
-stemmed_sentence = [snowball_stemmer.stem(w) for w in filtered_sentence]
-stemmed_sentence[0:10]
-
-porter_stemmer = PorterStemmer()
-snowball_stemmer = SnowballStemmer("english")
-stemmed_sentence = [porter_stemmer.stem(w) for w in filtered_sentence]
-stemmed_sentence[0:10]
-
-# %% [markdown]
-# # PART II: CREATING THE INVERSE-INDEX
-
-# %% [code]
-# Create inverse index which gives document number for each document and where word appears
-
-# first we need to create a list of all words
-l = plot_data[0]
-flatten = [item for sublist in l for item in sublist]
-words = flatten
-wordsunique = set(words)
-wordsunique = list(wordsunique)
-
-# %% [code]
-# create functions for TD-IDF / BM25
-
-
-def tf(word, doc):
-    return doc.count(word) / len(doc)
-
-
-def n_containing(word, doclist):
-    return sum(1 for doc in doclist if word in doc)
-
-
-def idf(word, doclist):
-    return math.log(len(doclist) / (0.01 + n_containing(word, doclist)))
-
-
-def tfidf(word, doc, doclist):
-    return (tf(word, doc) * idf(word, doclist))
-
-
-# %% [code]
-# Create dictonary of words
-# THIS ONE-TIME INDEXING IS THE MOST PROCESSOR-INTENSIVE STEP AND WILL TAKE TIME TO RUN (BUT ONLY NEEDS TO BE RUN ONCE)
-
-plottest = plot_data[0][0:1000]
-
-worddic = {}
-
-for doc in plottest:
-    for word in wordsunique:
-        if word in doc:
-            word = str(word)
-            index = plottest.index(doc)
-            positions = list(np.where(np.array(plottest[index]) == word)[0])
-            idfs = tfidf(word, doc, plottest)
-            try:
-                worddic[word].append([index, positions, idfs])
-            except:
-                worddic[word] = []
-                worddic[word].append([index, positions, idfs])
-
-# %% [code]
-# the index creates a dic with each word as a KEY and a list of doc indexs, word positions, and td-idf score as VALUES
-worddic['china']
-
-# %% [code]
-# pickel (save) the dictonary to avoid re-calculating
-np.save('worddic_1000.npy', worddic)
-
-# %% [markdown]
-# # PART III: The Search Engine
-
-# %% [code]
-# create word search which takes multiple words and finds documents that contain both along with metrics for ranking:
-
-# (1) Number of occruances of search words
-# (2) TD-IDF score for search words
-# (3) Percentage of search terms
-# (4) Word ordering score
-# (5) Exact match bonus
 
 
 def search(searchsentence):
@@ -276,54 +101,17 @@ def search(searchsentence):
         else:
             fdic_order = 0
 
-        # also the one above should be given a big boost if ALL found together
-
-        # could make another metric for if they are not next to each other but still close
-
         return(searchsentence, words, fullcount_order, combocount_order, fullidf_order, fdic_order)
 
     except:
         return("")
 
 
-search('indonesia crude palm oil')[1]
-
-# %% [code]
-# 0 return will give back the search term, the rest will give back metrics (see above)
-
-search('indonesia crude palm oil')[1][1:10]
-
-# %% [code]
-# save metrics to dataframe for use in ranking and machine learning
-result1 = search('china daily says what')
-result2 = search('indonesia crude palm oil')
-result3 = search('price of nickel')
-result4 = search('north yemen sugar')
-result5 = search('nippon steel')
-result6 = search('China')
-result7 = search('Gold')
-result8 = search('trade')
-df = pd.DataFrame([result1, result2, result3, result4,
-                   result5, result6, result7, result8])
-df.columns = ['search term', 'actual_words_searched',
-              'num_occur', 'percentage_of_terms', 'td-idf', 'word_order']
-df
-
-# %% [code]
-# look to see if the top documents seem to make sense
-
-alldocslist[1]
-
-# %% [markdown]
-# # PART IV: Rank and return (rules based)
-
-# %% [code]
-# create a simple (non-machine learning) rank and return function
-
-
 def rank(term):
     results = search(term)
-
+    if len(results) < 6:
+        print("Could not find appropriate matches")
+        return
     # get metrics
     num_score = results[2]
     per_score = results[3]
@@ -379,234 +167,40 @@ def rank(term):
         for top in othertops:
             if top not in final_candidates:
                 final_candidates.insert(len(final_candidates), top)
-
+    #indeces = []
+    print()
     for index, results in enumerate(final_candidates):
         if index < 5:
-            print("RESULT", index + 1, ":", alldocslist[results][0:100], "...")
+            print()
+            print(str(index + 1) + ".", df['title'][results])
+            print("------------------")
+            print("Authors:", df['author'][results])
+            print(alldocslist[results][0:100], "...")
+            print()
+    print()
 
 
-# %% [code]
-# example of output
-rank('indonesia palm oil')
+# Reading and combinging datasets
+articles1 = pd.read_csv('kaggle-news-dataset/articles1.csv')
+articles2 = pd.read_csv('kaggle-news-dataset/articles2.csv')
+articles3 = pd.read_csv('kaggle-news-dataset/articles3.csv')
 
-# %% [code]
-# example of output
-rank('china')
+df = pd.concat([articles1,
+                articles2,
+                articles3], ignore_index=True)
 
-# %% [markdown]
-# # PART V: Rank and return (machine learning)
+raw_number = df.shape[0]
 
-# %% [code]
-# Create pseudo-truth set using first 5 words
-# Because I don't have a turth set I will generate a pseudo one by pulling terms from the documents - this is far from perfect
-# as it may not approximate well peoples actual queries but it will serve well to build the ML architecture
+# Excluding punctuation
+exclude = set(string.punctuation)
+alldocslist = []
 
-df_truth = pd.DataFrame()
+for i in range(raw_number):
+    text = df['content'][i]
+    text = ''.join(ch for ch in text if ch not in exclude)
+    alldocslist.append(text)
 
-for doc in plottest:
-    first_five = doc[0:5]
-    test_sentence = ' '.join(first_five)
-    result = search(test_sentence)
-    df_temp = pd.DataFrame([result])
-    df_truth = pd.concat([df_truth, df_temp])
+worddic = np.load('worddic_1000.npy', allow_pickle=True).tolist()
 
-df_truth['truth'] = range(0, len(plottest))
-
-# %% [code]
-# create another psuedo-truth set using random 3 word sequence from docs
-
-df_truth1 = pd.DataFrame()
-seqlen = 3
-
-for doc in plottest:
-    try:
-        start = random.randint(0, (len(doc)-seqlen))
-        random_seq = doc[start:start+seqlen]
-        test_sentence = ' '.join(random_seq)
-    except:
-        test_sentence = doc[0]
-    result = search(test_sentence)
-    df_temp = pd.DataFrame([result])
-    df_truth1 = pd.concat([df_truth1, df_temp])
-
-df_truth1['truth'] = range(0, len(plottest))
-
-# %% [code]
-# create another psuedo-truth set using different random 4 word sequence from docs
-
-df_truth2 = pd.DataFrame()
-seqlen = 4
-
-for doc in plottest:
-    try:
-        start = random.randint(0, (len(doc)-seqlen))
-        random_seq = doc[start:start+seqlen]
-        test_sentence = ' '.join(random_seq)
-    except:
-        test_sentence = doc[0]
-    result = search(test_sentence)
-    df_temp = pd.DataFrame([result])
-    df_truth2 = pd.concat([df_truth2, df_temp])
-
-df_truth2['truth'] = range(0, len(plottest))
-
-# %% [code]
-# create another psuedo-truth set using different random 2 word sequence from docs
-
-df_truth3 = pd.DataFrame()
-seqlen = 2
-
-for doc in plottest:
-    try:
-        start = random.randint(0, (len(doc)-seqlen))
-        random_seq = doc[start:start+seqlen]
-        test_sentence = ' '.join(random_seq)
-    except:
-        test_sentence = doc[0]
-    result = search(test_sentence)
-    df_temp = pd.DataFrame([result])
-    df_truth3 = pd.concat([df_truth3, df_temp])
-
-df_truth3['truth'] = range(0, len(plottest))
-
-# %% [code]
-# combine the truth sets and save to disk
-truth_set = pd.concat([df_truth, df_truth1, df_truth2, df_truth3])
-truth_set.columns = ['search term', 'actual_words_searched',
-                     'num_occur', 'percentage_of_terms', 'td-idf', 'word_order', 'truth']
-truth_set.to_csv("truth_set_final.csv")
-
-# %% [code]
-truth_set[0:10]
-
-# %% [code]
-truth_set
-test_set = truth_set[0:3]
-test_set
-
-# %% [code]
-# convert to long format for ML
-# WARNING AGAIN THIS IS A SLOW PROCESS DUE TO RAM ILOC - COULD BE OPTIMISED FOR FASTER PERFORMANCE
-# BUG When min(maxnum, len(truth_set) <- is a int not a list because of very short variable length)
-
-# row is row
-# column is variable
-# i is the result
-
-final_set = pd.DataFrame()
-test_set = truth_set[1:100]
-maxnum = 5
-
-for row in range(0, len(test_set.index)):
-    test_set = truth_set[1:100]
-    for col in range(2, 6):
-        for i in range(0, min(maxnum, len(truth_set.iloc[row][col]))):
-            x = pd.DataFrame([truth_set.iloc[row][col][i]])
-            x['truth'] = truth_set.iloc[row]['truth']
-            x.columns = [(str(truth_set.columns[col]), "index", i),
-                         (str(truth_set.columns[col]), "score", i), 'truth']
-            test_set = test_set.merge(x, on='truth')
-    final_set = pd.concat([final_set, test_set])
-
-final_set.head()
-
-# %% [code]
-final_set.to_csv("ML_set_100.csv")
-
-# %% [code]
-final_set2 = final_set.drop(['actual_words_searched', 'num_occur',
-                             'percentage_of_terms', 'search term', 'td-idf', 'word_order'], 1)
-final_set2.to_csv("ML_set_100_3.csv")
-final_set2.head()
-
-# %% [code]
-final_set3 = final_set2
-final_set3[0:10]
-
-# %% [code]
-# Load libraries
-# %matplotlib inline
-
-
-# %% [code]
-final_set3['y'] = final_set3['truth']
-final_set3 = final_set3.drop(['truth'], 1)
-final_set3
-
-# %% [code]
-data = final_set3
-data.corr()['y']
-
-# %% [code]
-data['a'] = data[data.columns[0]]
-data['b'] = data[data.columns[10]]
-data['c'] = data[data.columns[20]]
-data['d'] = data[data.columns[30]]
-
-# %% [code]
-X = data
-
-train, test = model_selection.train_test_split(X, train_size=0.80)
-
-model = smf.ols(formula='y ~ 1 + a + b + c + d',
-               data=train).fit()
-
-modelforout = model
-
-model.summary()
-
-# %% [code]
-fig, ax = plt.subplots(figsize=(12, 8))
-fig = sm.graphics.influence_plot(modelforout, ax=ax, criterion="cooks")
-
-# %% [code]
-res = model.resid  # residuals
-fig = sm.qqplot(res)
-plt.show()
-
-# %% [markdown]
-# # PART VI: FINAL GUI
-
-# %% [code]
-term = input("search: ")
-rank(term)
-
-# %% [code]
-term = input("search: ")
-try:
-    rank(term)
-    feedback = input("were these articles helpful?, (Y/N): ")
-    if feedback == "Y":
-        np.save('correct_search.npy', worddic)
-    #elif feedback == "exit":
-    else:
-        print("sorry it was not helpful, try again")
-except:
-    print("no results found")
-
-# %% [markdown]
-# # TO-DO / Improvements
-#
-# Indexer:
-# - Improve stem/lemm
-# - Add new metrics (e.g. bonus for exact matches / closeness metric)
-# - Add BM25 (and variants)
-#
-# Search Engine:
-# - Add query expansion / synonyms
-# - Add spellchecker functions
-# - Add confidence level
-#
-# Data sources:
-# - Find another source with a proper truth set
-# - Download wikipedia and try it with this
-#
-# Machine Learning:
-# - Fix ML example compiler (crashes if len(col) is so short it is an int and so no len function)
-# - Try different algorithms
-#
-# GUI:
-# - Build GUI interface
-# - Add feedback mechanism
-
-# %% [code]
+while True:
+    rank(input("Search: "))

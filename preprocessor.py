@@ -1,29 +1,13 @@
+import math
+import nltk
+import re
+import string
+
+import numpy as np
 import pandas as pd
 
-from sklearn import linear_model, feature_selection, preprocessing
-from sklearn import model_selection
-from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error
-from statsmodels.tools.tools import add_constant
-from statsmodels.tools.eval_measures import mse
-import statsmodels.formula.api as smf
-import statsmodels.api as sm
-import matplotlib.pyplot as plt
-from scipy import stats
 from collections import Counter
-import numpy as np
-import re
-from textblob import TextBlob as tb
-import math
-
-import numpy as np
-import string
-import random
-import nltk
-from nltk.corpus import brown
-from nltk.corpus import reuters
 from nltk.tokenize import word_tokenize
-from nltk.tokenize import RegexpTokenizer
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from nltk.stem import SnowballStemmer
@@ -69,7 +53,7 @@ plot_data[0][1][0:10]
 # %% [code]
 
 # make all words lower case for all docs
-for x in range(len(reuters.fileids())):
+for x in range(raw_number):
     lowers = [word.lower() for word in plot_data[0][x]]
     plot_data[0][x] = lowers
 
@@ -79,7 +63,7 @@ plot_data[0][1][0:10]
 # remove stop words from all docs
 stop_words = set(stopwords.words('english'))
 
-for x in range(len(reuters.fileids())):
+for x in range(raw_number):
     filtered_sentence = [w for w in plot_data[0][x] if not w in stop_words]
     plot_data[0][x] = filtered_sentence
 
@@ -139,7 +123,8 @@ plottest = plot_data[0][0:1000]
 worddic = {}
 
 for doc in plottest:
-    for word in wordsunique:
+    for i, word in enumerate(wordsunique):
+        print(str(i * 100 / len(wordsunique)) + "% completed")
         if word in doc:
             word = str(word)
             index = plottest.index(doc)
