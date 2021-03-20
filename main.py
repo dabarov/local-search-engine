@@ -5,7 +5,7 @@
 # ## PART I: Preparing the documents/webpages
 
 # %% [code]
-# Load libraries
+# oad libraries
 
 from sklearn import linear_model, feature_selection, preprocessing
 from sklearn import model_selection
