@@ -35,7 +35,6 @@ for i in range(raw_number):
 
 print(alldocslist[1])
 
-# %% [code]
 # tokenize words in all DOCS
 plot_data = [[]] * len(alldocslist)
 
@@ -46,20 +45,17 @@ for doc in alldocslist:
 
 print(plot_data[0][1])
 
-# %% [code]
 # Navigation: first index gives all documents, second index gives specific document, third index gives words of that doc
-plot_data[0][1][0:10]
+print(plot_data[0][1][0:10])
 
-# %% [code]
 
 # make all words lower case for all docs
 for x in range(raw_number):
     lowers = [word.lower() for word in plot_data[0][x]]
     plot_data[0][x] = lowers
 
-plot_data[0][1][0:10]
+print(plot_data[0][1][0:10])
 
-# %% [code]
 # remove stop words from all docs
 stop_words = set(stopwords.words('english'))
 
@@ -67,24 +63,21 @@ for x in range(raw_number):
     filtered_sentence = [w for w in plot_data[0][x] if not w in stop_words]
     plot_data[0][x] = filtered_sentence
 
-plot_data[0][1][0:10]
+print(plot_data[0][1][0:10])
 
-# %% [code]
 # stem words EXAMPLE (could try others/lemmers )
 
 snowball_stemmer = SnowballStemmer("english")
 stemmed_sentence = [snowball_stemmer.stem(w) for w in filtered_sentence]
-stemmed_sentence[0:10]
+print(stemmed_sentence[0:10])
 
 porter_stemmer = PorterStemmer()
 snowball_stemmer = SnowballStemmer("english")
 stemmed_sentence = [porter_stemmer.stem(w) for w in filtered_sentence]
-stemmed_sentence[0:10]
+print(stemmed_sentence[0:10])
 
-# %% [markdown]
 # # PART II: CREATING THE INVERSE-INDEX
 
-# %% [code]
 # Create inverse index which gives document number for each document and where word appears
 
 # first we need to create a list of all words
@@ -94,7 +87,6 @@ words = flatten
 wordsunique = set(words)
 wordsunique = list(wordsunique)
 
-# %% [code]
 # create functions for TD-IDF / BM25
 
 
@@ -114,14 +106,13 @@ def tfidf(word, doc, doclist):
     return (tf(word, doc) * idf(word, doclist))
 
 
-# %% [code]
 # Create dictonary of words
 # THIS ONE-TIME INDEXING IS THE MOST PROCESSOR-INTENSIVE STEP AND WILL TAKE TIME TO RUN (BUT ONLY NEEDS TO BE RUN ONCE)
 
 plottest = plot_data[0][0:1000]
 
 worddic = {}
-
+print("Starting word indexing:")
 for doc in plottest:
     for i, word in enumerate(wordsunique):
         print(str(i * 100 / len(wordsunique)) + "% completed")
@@ -136,10 +127,5 @@ for doc in plottest:
                 worddic[word] = []
                 worddic[word].append([index, positions, idfs])
 
-# %% [code]
-# the index creates a dic with each word as a KEY and a list of doc indexs, word positions, and td-idf score as VALUES
-worddic['china']
-
-# %% [code]
 # pickel (save) the dictonary to avoid re-calculating
 np.save('worddic_1000.npy', worddic)
