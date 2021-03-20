@@ -13,8 +13,7 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error
 from statsmodels.tools.tools import add_constant
 from statsmodels.tools.eval_measures import mse
-import statsmodels.api as sma
-import statsmodels.formula.api as sm
+import statsmodels.formula.api as smf
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 from scipy import stats
@@ -39,6 +38,7 @@ from nltk.corpus import stopwords
 
 from nltk.stem.porter import PorterStemmer
 from nltk.stem import SnowballStemmer
+
 
 # %% [code]
 # load 10k reuters news documents
@@ -548,7 +548,7 @@ X = data
 
 train, test = model_selection.train_test_split(X, train_size=0.80)
 
-model = sm.OLS(formula='y ~ 1 + a + b + c + d',
+model = smf.ols(formula='y ~ 1 + a + b + c + d',
                data=train).fit()
 
 modelforout = model
@@ -557,11 +557,11 @@ model.summary()
 
 # %% [code]
 fig, ax = plt.subplots(figsize=(12, 8))
-fig = sma.graphics.influence_plot(modelforout, ax=ax, criterion="cooks")
+fig = sm.graphics.influence_plot(modelforout, ax=ax, criterion="cooks")
 
 # %% [code]
 res = model.resid  # residuals
-fig = sma.qqplot(res)
+fig = sm.qqplot(res)
 plt.show()
 
 # %% [markdown]
