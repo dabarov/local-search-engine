@@ -39,7 +39,6 @@ Google nlp task @HackNU/2021. Done through following [this tutorial](https://www
 nltk                          3.5
 numpy                         1.18.1
 pandas                        0.24.2
-sklearn                       0.0
 ```
 
 ## Usage
