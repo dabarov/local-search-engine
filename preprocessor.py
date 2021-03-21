@@ -113,9 +113,9 @@ plottest = plot_data[0][0:1000]
 
 worddic = {}
 print("Starting word indexing:")
-for doc in plottest:
-    for i, word in enumerate(wordsunique):
-        print(str(i * 100 / len(wordsunique)) + "% completed")
+for i, doc in enumerate(plottest):
+    print(str(i * 100 // len(plottest)) + "% completed")
+    for word in wordsunique:
         if word in doc:
             word = str(word)
             index = plottest.index(doc)
