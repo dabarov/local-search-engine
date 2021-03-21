@@ -1,6 +1,6 @@
 # Local search engine
 
-Google nlp task @HackNU/2021. Done through follwoing [this tutorial](https://www.kaggle.com/amitkumarjaiswal/nlp-search-engine).
+Google nlp task @HackNU/2021. Done through follwoing [this tutorial](https://www.kaggle.com/amitkumarjaiswal/nlp-search-engine) by [Amit Kumar Jaiswal](https://www.kaggle.com/amitkumarjaiswal) .
 
 ## Screenshot
 
