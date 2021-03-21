@@ -11,7 +11,6 @@ from nltk.corpus import stopwords
 
 def search(searchsentence):
     try:
-        # split sentence into individual words
         searchsentence = searchsentence.lower()
         try:
             words = searchsentence.split(' ')
@@ -21,7 +20,6 @@ def search(searchsentence):
         idfdic = {}
         closedic = {}
 
-        # remove words if not in worddic
         realwords = []
         for word in words:
             if word in list(worddic.keys()):
@@ -29,7 +27,6 @@ def search(searchsentence):
         words = realwords
         numwords = len(words)
 
-        # make metric of number of occurances of all words in each doc & largest total IDF
         for word in words:
             for indpos in worddic[word]:
                 index = indpos[0]
@@ -42,7 +39,6 @@ def search(searchsentence):
                 fullidf_order = sorted(
                     idfdic.items(), key=lambda x: x[1], reverse=True)
 
-        # make metric of what percentage of words appear in each doc
         combo = []
         alloptions = {k: worddic.get(k, None) for k in (words)}
         for worddex in list(alloptions.values()):
@@ -56,7 +52,6 @@ def search(searchsentence):
         combocount_order = sorted(
             combocount.items(), key=lambda x: x[1], reverse=True)
 
-        # make metric for if words appear in same order as in search
         if len(words) > 1:
             x = []
             y = []
@@ -112,7 +107,6 @@ def rank(term):
     if len(results) < 6:
         print("Could not find appropriate matches")
         return
-    # get metrics
     num_score = results[2]
     per_score = results[3]
     tfscore = results[4]
@@ -120,7 +114,6 @@ def rank(term):
 
     final_candidates = []
 
-    # rule1: if high word order score & 100% percentage terms then put at top position
     try:
         first_candidates = []
 
@@ -136,38 +129,31 @@ def rank(term):
             if match_candidates[1] == 1 and match_candidates[0] in first_candidates:
                 final_candidates.append(match_candidates[0])
 
-    # rule2: next add other word order score which are greater than 1
-
         t3_order = first_candidates[0:3]
         for each in t3_order:
             if each not in final_candidates:
                 final_candidates.insert(len(final_candidates), each)
 
-    # rule3: next add top td-idf results
         final_candidates.insert(len(final_candidates), tfscore[0][0])
         final_candidates.insert(len(final_candidates), tfscore[1][0])
 
-    # rule4: next add other high percentage score
         t3_per = second_candidates[0:3]
         for each in t3_per:
             if each not in final_candidates:
                 final_candidates.insert(len(final_candidates), each)
 
-    # rule5: next add any other top results for metrics
         othertops = [num_score[0][0], per_score[0]
                      [0], tfscore[0][0], order_score[0][0]]
         for top in othertops:
             if top not in final_candidates:
                 final_candidates.insert(len(final_candidates), top)
 
-    # unless single term searched, in which case just return
     except:
         othertops = [num_score[0][0], num_score[1][0],
                      num_score[2][0], per_score[0][0], tfscore[0][0]]
         for top in othertops:
             if top not in final_candidates:
                 final_candidates.insert(len(final_candidates), top)
-    #indeces = []
     print()
     for index, results in enumerate(final_candidates):
         if index < 5:
@@ -180,7 +166,6 @@ def rank(term):
     print()
 
 
-# Reading and combinging datasets
 articles1 = pd.read_csv('kaggle-news-dataset/articles1.csv')
 articles2 = pd.read_csv('kaggle-news-dataset/articles2.csv')
 articles3 = pd.read_csv('kaggle-news-dataset/articles3.csv')
@@ -191,7 +176,6 @@ df = pd.concat([articles1,
 
 raw_number = df.shape[0]
 
-# Excluding punctuation
 exclude = set(string.punctuation)
 alldocslist = []
 
