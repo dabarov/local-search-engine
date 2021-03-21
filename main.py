@@ -158,7 +158,7 @@ def rank(term):
     for index, results in enumerate(final_candidates):
         if index < 5:
             print()
-            print(str(index + 1) + ".", df['title'][results])
+            print(str(df['id'][results]) + ".", df['title'][results])
             print("------------------")
             print("Authors:", df['author'][results])
             print(alldocslist[results][0:100], "...")
