@@ -1,6 +1,6 @@
 # Local search engine
 
-Google nlp task @HackNU/2021. Done through follwoing [this tutorial](https://www.kaggle.com/amitkumarjaiswal/nlp-search-engine) by [Amit Kumar Jaiswal](https://www.kaggle.com/amitkumarjaiswal) .
+Google nlp task @HackNU/2021. Done through following [this tutorial](https://www.kaggle.com/amitkumarjaiswal/nlp-search-engine) by [Amit Kumar Jaiswal](https://www.kaggle.com/amitkumarjaiswal) .
 
 ## Screenshot
 
@@ -39,6 +39,7 @@ Google nlp task @HackNU/2021. Done through follwoing [this tutorial](https://www
 nltk                          3.5
 numpy                         1.18.1
 pandas                        0.24.2
+sklearn                       0.0
 ```
 
 ## Usage
@@ -49,7 +50,7 @@ pandas                        0.24.2
 python3 main.py
 ```
 
-- Wait for several seconds for code to process word dictionary
+- Wait several seconds for code to process word dictionary
 - Type your request when you see the follwing line:
 
 ```sh
